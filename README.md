@@ -71,6 +71,13 @@ YearCal/YearCalApp.swift         Menu bar app and pinned panel
 YearCalWidget/YearCalWidget.swift Widgets, timeline provider, ‹ › intents, background styles
 ```
 
+## Disclaimer
+
+This software is provided "as is", without warranty of any kind. It is a personal project: the
+author accepts no liability for any damage, data loss or other problems arising from downloading,
+building or using it. You use it entirely at your own risk. The app is not notarized by Apple;
+review the source before running it.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
