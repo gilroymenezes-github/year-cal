@@ -29,16 +29,30 @@ option (right-click → Edit Widget): Clear, Smoke or Solid.
 
 ### Option A — download the app (no Xcode needed)
 
-1. Download `YearCal-1.0.zip` from the [latest release](https://github.com/gilroymenezes-github/year-cal/releases/latest) and unzip it.
-2. Move `YearCal.app` to `~/Applications` (or `/Applications`).
-3. The app is ad-hoc signed, not notarized, so clear the download quarantine flag, then open it:
+Works on any Mac running macOS 14 (Sonoma) or later, Apple Silicon or Intel, including the
+latest macOS. The app is ad-hoc signed but not notarized by Apple, so macOS blocks it on first
+launch until you allow it (step 3).
 
-```sh
-xattr -dr com.apple.quarantine ~/Applications/YearCal.app
-open ~/Applications/YearCal.app
-```
+1. Download `YearCal-1.0.zip` from the [latest release](https://github.com/gilroymenezes-github/year-cal/releases/latest) and double-click it to unzip.
+2. Drag `YearCal.app` into your **Applications** folder (or `~/Applications`).
+3. Allow it to open, using either method:
+   - **Terminal (quickest):** run this, adjusting the path if you used `~/Applications`:
+     ```sh
+     xattr -dr com.apple.quarantine /Applications/YearCal.app
+     open /Applications/YearCal.app
+     ```
+   - **No Terminal:** double-click the app, dismiss the "can't be opened" warning, then open
+     **System Settings → Privacy & Security**, scroll to *Security*, click **Open Anyway** next
+     to YearCal, and confirm with your password or Touch ID.
+4. A calendar icon appears in the menu bar. Add widgets with right-click desktop →
+   **Edit Widgets…** → search "Year Calendar".
 
-Then add the widgets from *Edit Widgets…*. If they don't appear, log out and back in.
+If the widgets don't appear in the gallery, log out and back in once (or restart), then check
+again.
+
+**Uninstall:** quit YearCal from the menu bar panel, delete `YearCal.app`, and remove the widgets
+from the desktop. Turn off *Open at login* in the panel first if you want it gone from
+Login Items.
 
 ### Option B — build from source
 
