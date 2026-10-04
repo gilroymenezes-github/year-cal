@@ -1,0 +1,13 @@
+# Xcode
+DerivedData/
+build/
+xcuserdata/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+YearCal.xcodeproj/project.xcworkspace/
+
+# Local install / diagnostics output
+install.log
+widget-diag*.log
+
+.DS_Store
