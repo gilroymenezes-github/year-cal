@@ -33,7 +33,7 @@ Works on any Mac running macOS 14 (Sonoma) or later, Apple Silicon or Intel, inc
 latest macOS. The app is ad-hoc signed but not notarized by Apple, so macOS blocks it on first
 launch until you allow it (step 3).
 
-1. Download `YearCal-1.2.zip` from the [latest release](https://github.com/gilroymenezes-github/year-cal/releases/latest) and double-click it to unzip.
+1. Download `YearCal-1.3.zip` from the [latest release](https://github.com/gilroymenezes-github/year-cal/releases/latest) and double-click it to unzip.
 2. Drag `YearCal.app` into your **Applications** folder (or `~/Applications`).
 3. Allow it to open, using either method:
    - **Terminal (quickest):** run this, adjusting the path if you used `~/Applications`:

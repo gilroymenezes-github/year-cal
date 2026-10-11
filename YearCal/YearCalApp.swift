@@ -48,6 +48,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         WidgetCenter.shared.reloadAllTimelines()
 
+        // Refresh the widgets when the system calendar settings change (first day of week,
+        // region, time zone) so they follow the new setting without a manual reload.
+        for name in [NSLocale.currentLocaleDidChangeNotification, .NSSystemTimeZoneDidChange, .NSCalendarDayChanged] {
+            NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                self?.model.reset()
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        }
+
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
             button.image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "YearCal")

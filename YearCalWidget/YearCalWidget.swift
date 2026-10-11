@@ -128,7 +128,7 @@ struct Provider: AppIntentTimelineProvider {
 
     /// One entry now, then one at each of the next 7 midnights, so "today" stays correct.
     func timeline(for configuration: StyleIntent, in context: Context) async -> Timeline<DayEntry> {
-        let cal = Calendar.current
+        let cal = Calendar.autoupdatingCurrent
         let now = Date()
         let y = NavState.yearOffset
         let m = NavState.monthOffset
@@ -195,7 +195,7 @@ struct MonthNavHeader: View {
 
     private var rangeText: String {
         guard let first = months.first, let last = months.last else { return "" }
-        let symbols = Calendar.current.shortStandaloneMonthSymbols
+        let symbols = Calendar.autoupdatingCurrent.shortStandaloneMonthSymbols
         let a = symbols[first.month - 1], b = symbols[last.month - 1]
         return first.year == last.year
             ? "\(a) – \(b) \(last.year)"

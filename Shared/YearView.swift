@@ -94,7 +94,7 @@ struct MonthView: View {
     var textScale: CGFloat = 0.5
     var weekNumbers: Bool = false
 
-    private var calendar: Calendar { Calendar.current }
+    private var calendar: Calendar { Calendar.autoupdatingCurrent }
 
     private var monthName: String {
         let symbols = calendar.standaloneMonthSymbols
@@ -267,7 +267,7 @@ extension View {
 /// Helpers for picking which months to show.
 enum MonthPicker {
     static func currentYear(_ date: Date = Date()) -> Int {
-        Calendar.current.component(.year, from: date)
+        Calendar.autoupdatingCurrent.component(.year, from: date)
     }
 
     static func fullYear(_ y: Int) -> [MonthRef] {
@@ -287,7 +287,7 @@ enum MonthPicker {
 
     /// Three consecutive months centred on today's month shifted by `offset` months.
     static func around(_ date: Date, offset: Int = 0) -> [MonthRef] {
-        let cal = Calendar.current
+        let cal = Calendar.autoupdatingCurrent
         return (-1...1).compactMap { delta in
             guard let d = cal.date(byAdding: .month, value: delta + offset, to: date) else { return nil }
             return MonthRef(year: cal.component(.year, from: d), month: cal.component(.month, from: d))
