@@ -166,18 +166,19 @@ struct MonthView: View {
 
             VStack(spacing: 0) {
                 Text(monthName)
-                    .font(.system(size: fontSize * 1.1, weight: .semibold, design: .rounded))
-                    .foregroundStyle(isCurrentMonth ? Color.accentColor : Color.primary)
+                    .font(.system(size: fontSize * (weekNumbers ? 0.82 : 1.1), weight: .semibold, design: .rounded))
+                    .foregroundStyle(isCurrentMonth ? AnyShapeStyle(Color.accentColor)
+                                     : (weekNumbers ? AnyShapeStyle(.tertiary) : AnyShapeStyle(Color.primary)))
                     .widgetAccentableIfAvailable(isCurrentMonth)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
-                    .padding(.leading, wkW + cellW * 0.15)
+                    .padding(.leading, cellW * 0.15)
                     .frame(width: geo.size.width, height: unit * 1.1, alignment: .leading)
 
                 HStack(spacing: 0) {
                     if weekNumbers {
-                        Text("Wk")
-                            .font(.system(size: fontSize * 0.62, weight: .medium, design: .rounded))
+                        Text("W")
+                            .font(.system(size: fontSize * 0.82, weight: .medium, design: .rounded))
                             .foregroundStyle(.tertiary)
                             .frame(width: wkW, height: unit * 0.9)
                     }
@@ -193,16 +194,18 @@ struct MonthView: View {
                     HStack(spacing: 0) {
                         if weekNumbers {
                             Text(weeks[week].map(String.init) ?? "")
-                                .font(.system(size: fontSize * 0.62, weight: .medium))
+                                // Week numbers are the prominent numbers in this layout.
+                                .font(.system(size: fontSize * 0.82, weight: .regular))
                                 .monospacedDigit()
-                                .foregroundStyle(.tertiary)
+                                .foregroundStyle(Color.primary)
                                 .frame(width: wkW, height: unit)
                         }
                         ForEach(0..<7, id: \.self) { d in
                             let day = days[week * 7 + d]
                             DayCell(day: day,
                                     isToday: day != nil && day == todayDay,
-                                    fontSize: fontSize,
+                                    fontSize: weekNumbers ? fontSize * 0.62 : fontSize,
+                                    faint: weekNumbers,
                                     width: cellW,
                                     height: unit)
                         }
@@ -218,6 +221,8 @@ private struct DayCell: View {
     let day: Int?
     let isToday: Bool
     let fontSize: CGFloat
+    /// Dates are drawn small and faint (today stays bright) when week numbers take the lead.
+    var faint: Bool = false
     let width: CGFloat
     let height: CGFloat
 
@@ -227,7 +232,7 @@ private struct DayCell: View {
                 Text(String(day))
                     .font(.system(size: fontSize, weight: isToday ? .bold : .regular))
                     .monospacedDigit()
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(faint && !isToday ? AnyShapeStyle(.tertiary) : AnyShapeStyle(Color.primary))
                     .fixedSize()
                     .frame(width: width, height: height)
                     .background {

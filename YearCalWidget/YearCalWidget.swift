@@ -331,7 +331,7 @@ struct ThreeMonthsView: View {
         let months = MonthPicker.around(entry.date, offset: entry.monthOffset)
         if isPortraitXL {
             MonthsGrid(months: months, columns: 1, today: entry.date,
-                       textScale: 0.5, weekNumbers: true, headerHeight: 28) {
+                       textScale: 0.5, weekNumbers: true, headerHeight: 40) {
                 MonthNavHeader(entry: entry, months: months)
             }
             .padding(.horizontal, 16)
