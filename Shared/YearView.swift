@@ -20,9 +20,11 @@ struct MonthsGrid<Header: View>: View {
     /// How much of a day cell's width the digits may use (0.5 default; higher = bigger text).
     var textScale: CGFloat = 0.5
     var hSpacingOverride: CGFloat? = nil
+    /// Show a week-number column on the left of each month.
+    var weekNumbers: Bool = false
 
     init(months: [MonthRef], columns: Int, today: Date, focusYear: Int? = nil,
-         textScale: CGFloat = 0.5, hSpacing: CGFloat? = nil,
+         textScale: CGFloat = 0.5, hSpacing: CGFloat? = nil, weekNumbers: Bool = false,
          headerHeight: CGFloat, @ViewBuilder header: () -> Header) {
         self.months = months
         self.columns = columns
@@ -30,6 +32,7 @@ struct MonthsGrid<Header: View>: View {
         self.focusYear = focusYear
         self.textScale = textScale
         self.hSpacingOverride = hSpacing
+        self.weekNumbers = weekNumbers
         self.headerHeight = headerHeight
         self.header = header()
     }
@@ -58,7 +61,8 @@ struct MonthsGrid<Header: View>: View {
                                     if i < months.count {
                                         MonthView(ref: months[i], today: today,
                                                   outsideYear: focusYear.map { $0 != months[i].year } ?? false,
-                                                  textScale: textScale)
+                                                  textScale: textScale,
+                                                  weekNumbers: weekNumbers)
                                     } else {
                                         Color.clear
                                     }
@@ -75,9 +79,9 @@ struct MonthsGrid<Header: View>: View {
 
 extension MonthsGrid where Header == EmptyView {
     init(months: [MonthRef], columns: Int, today: Date, focusYear: Int? = nil,
-         textScale: CGFloat = 0.5, hSpacing: CGFloat? = nil) {
+         textScale: CGFloat = 0.5, hSpacing: CGFloat? = nil, weekNumbers: Bool = false) {
         self.init(months: months, columns: columns, today: today, focusYear: focusYear,
-                  textScale: textScale, hSpacing: hSpacing,
+                  textScale: textScale, hSpacing: hSpacing, weekNumbers: weekNumbers,
                   headerHeight: 0) { EmptyView() }
     }
 }
@@ -88,6 +92,7 @@ struct MonthView: View {
     let today: Date
     var outsideYear: Bool = false
     var textScale: CGFloat = 0.5
+    var weekNumbers: Bool = false
 
     private var calendar: Calendar { Calendar.current }
 
@@ -113,6 +118,22 @@ struct MonthView: View {
         return Array(s[first...] + s[..<first])
     }
 
+    /// Week number for each of the 6 rows (nil for an empty trailing row), using the
+    /// user's calendar so numbering matches the row's first weekday.
+    private var weekNumbersByRow: [Int?] {
+        var comps = DateComponents()
+        comps.year = ref.year
+        comps.month = ref.month
+        comps.day = 1
+        let days = slots
+        guard let first = calendar.date(from: comps) else { return Array(repeating: nil, count: 6) }
+        return (0..<6).map { row in
+            guard let day = days[(row * 7)..<(row * 7 + 7)].compactMap({ $0 }).first,
+                  let date = calendar.date(byAdding: .day, value: day - 1, to: first) else { return nil }
+            return calendar.component(.weekOfYear, from: date)
+        }
+    }
+
     /// 42 slots (6 weeks x 7); nil for blanks.
     private var slots: [Int?] {
         var comps = DateComponents()
@@ -135,10 +156,13 @@ struct MonthView: View {
         GeometryReader { geo in
             // Rows: month name (1.1), weekday initials (0.9), 6 weeks (1 each) = 8 units.
             let unit = geo.size.height / 8
-            let cellW = geo.size.width / 7
+            // Week-number column is 0.8 of a day column.
+            let wkW: CGFloat = weekNumbers ? geo.size.width / 7.8 * 0.8 : 0
+            let cellW = (geo.size.width - wkW) / 7
             let fontSize = max(6, min(cellW * textScale, unit * 0.74))
             let days = slots
             let todayDay = todayDay
+            let weeks = weekNumbers ? weekNumbersByRow : []
 
             VStack(spacing: 0) {
                 Text(monthName)
@@ -147,10 +171,16 @@ struct MonthView: View {
                     .widgetAccentableIfAvailable(isCurrentMonth)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
-                    .padding(.leading, cellW * 0.15)
+                    .padding(.leading, wkW + cellW * 0.15)
                     .frame(width: geo.size.width, height: unit * 1.1, alignment: .leading)
 
                 HStack(spacing: 0) {
+                    if weekNumbers {
+                        Text("Wk")
+                            .font(.system(size: fontSize * 0.62, weight: .medium, design: .rounded))
+                            .foregroundStyle(.tertiary)
+                            .frame(width: wkW, height: unit * 0.9)
+                    }
                     ForEach(Array(weekdayInitials.enumerated()), id: \.offset) { _, s in
                         Text(s)
                             .font(.system(size: fontSize * 0.82, weight: .medium, design: .rounded))
@@ -161,6 +191,13 @@ struct MonthView: View {
 
                 ForEach(0..<6, id: \.self) { week in
                     HStack(spacing: 0) {
+                        if weekNumbers {
+                            Text(weeks[week].map(String.init) ?? "")
+                                .font(.system(size: fontSize * 0.62, weight: .medium))
+                                .monospacedDigit()
+                                .foregroundStyle(.tertiary)
+                                .frame(width: wkW, height: unit)
+                        }
                         ForEach(0..<7, id: \.self) { d in
                             let day = days[week * 7 + d]
                             DayCell(day: day,
@@ -190,15 +227,18 @@ private struct DayCell: View {
                 Text(String(day))
                     .font(.system(size: fontSize, weight: isToday ? .bold : .regular))
                     .monospacedDigit()
-                    .foregroundStyle(isToday ? Color.white : Color.primary)
+                    .foregroundStyle(Color.primary)
                     .fixedSize()
                     .frame(width: width, height: height)
                     .background {
                         if isToday {
-                            Circle()
-                                .fill(Color.accentColor)
-                                .frame(width: min(width, height) * 0.98, height: min(width, height) * 0.98)
-                                .widgetAccentableIfAvailable(true)
+                            // Outline (not filled) so the number keeps full contrast even when
+                            // macOS renders widgets on translucent glass. Rounded rectangle that
+                            // fills most of the day cell.
+                            RoundedRectangle(cornerRadius: min(width, height) * 0.24, style: .continuous)
+                                // Same subtle shade as the week numbers.
+                                .strokeBorder(.tertiary, lineWidth: max(1.5, fontSize * 0.11))
+                                .frame(width: width * 0.94, height: height * 0.9)
                         }
                     }
             } else {

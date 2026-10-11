@@ -313,15 +313,31 @@ struct SecondHalfWidget: Widget {
     }
 }
 
-// MARK: - Three months: sliding window, ‹ › moves one month
+// MARK: - Three months: sliding window, ‹ › moves one month.
+// Medium: 3 side by side. Extra-large portrait (macOS 27+): stacked, big dates + week numbers.
 
-struct ThreeMonthsWidget: Widget {
-    let kind = "YearCalThreeMonths"
+struct ThreeMonthsView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: DayEntry
 
-    var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: kind, intent: StyleIntent.self, provider: Provider()) { entry in
-            Styled(style: entry.style) {
-            let months = MonthPicker.around(entry.date, offset: entry.monthOffset)
+    private var isPortraitXL: Bool {
+        if #available(macOS 27.0, *) {
+            return family == .systemExtraLargePortrait
+        }
+        return false
+    }
+
+    var body: some View {
+        let months = MonthPicker.around(entry.date, offset: entry.monthOffset)
+        if isPortraitXL {
+            MonthsGrid(months: months, columns: 1, today: entry.date,
+                       textScale: 0.5, weekNumbers: true, headerHeight: 28) {
+                MonthNavHeader(entry: entry, months: months)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .padding(.bottom, 14)
+        } else {
             MonthsGrid(months: months, columns: 3, today: entry.date,
                        textScale: 0.62, hSpacing: 8, headerHeight: 20) {
                 MonthNavHeader(entry: entry, months: months)
@@ -329,12 +345,30 @@ struct ThreeMonthsWidget: Widget {
             .padding(.horizontal, 10)
             .padding(.top, 6)
             .padding(.bottom, 8)
+        }
+    }
+}
+
+private var threeMonthFamilies: [WidgetFamily] {
+    if #available(macOS 27.0, *) {
+        return [.systemMedium, .systemExtraLargePortrait]
+    }
+    return [.systemMedium]
+}
+
+struct ThreeMonthsWidget: Widget {
+    let kind = "YearCalThreeMonths"
+
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: kind, intent: StyleIntent.self, provider: Provider()) { entry in
+            Styled(style: entry.style) {
+                ThreeMonthsView(entry: entry)
             }
         }
         .contentMarginsDisabled()
         .configurationDisplayName("Three Months")
-        .description("A sliding three-month window. ‹ › moves one month; tap the range to come back.")
-        .supportedFamilies([.systemMedium])
+        .description("A sliding three-month window; ‹ › moves one month, tap the range to come back. Extra-large portrait adds bigger dates and week numbers.")
+        .supportedFamilies(threeMonthFamilies)
     }
 }
 
